@@ -6,57 +6,48 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 /** 
- * An application holding board, players and moving control.
+ * An application holding a board, players and a moving control.
  * 
  * @author Chih-Hsi Chang
- * @version 2017
+ * @version 2018
  */
 public class Game extends Application {
     /** Square size. */
-    static final int squareSize = 50;
-    static final int pieceSize = 40;
-    static final int shift = 5;
+    static final int SQUARESIZE = 50;
+    /** Piece size. */
+    static final int PIECESIZE = 40;
+    /** Shift for pieces. */
+    static final int SHIFT = 5;
+    /** The number of pieces. */
+    static final int PIECENUMBER = 16;
     
-    Board board;
-    Player twoPlayers[] = new Player[2];
-    Group pieceG;
-    Group squareG;
-    Group root;
-
-    Piece allPiece[][] = new Piece[2][16];
-    Piece currentPiece;
-    Color currentTeam;
+    /** A board. */
+    private Board board;
+    /** Players. */
+    private Player[] twoPlayers = new Player[2];
+    /** Group of all images. */
+    private Group root;
+    /** All pieces. */
+    private Piece[][] allPiece = new Piece[2][PIECENUMBER];
+    /** Current held piece. */
+    private Piece currentPiece;
+    /** Current team color. */
+    private Color currentTeam;
 
     /**
-     * Read name from user.
-     * @param person
-     *            the person for displaying.
+     * Displays a board and pieces for moving.
+     * 
+     * @param primaryStage
+     *            a Stage
      */
     public void start(Stage primaryStage) {
-        reSet();
-        board = new Board(twoPlayers[0], twoPlayers[1]);
-
-        squareG = drawSquare();
-        
+        reSetGame();
+        board = new Board(SQUARESIZE);
+      
         allPiece[0] = twoPlayers[0].getPiece();
         allPiece[1] = twoPlayers[1].getPiece(); 
-
-        Group pieceG = new Group();
         
-        for(int i = 0; i < 2; i++) {
-            for(int j = 0; j < 16; j++) {
-                pieceG.getChildren().addAll(allPiece[i][j]);
-            }
-        }
-
-
-        
-        
-        
-        
-        
-        root = new Group(squareG, pieceG);
-        
+        root = new Group(board, twoPlayers[0], twoPlayers[1]);
         
         final int appWidth = 400;
         final int appHeight = 400;
@@ -68,33 +59,39 @@ public class Game extends Application {
         primaryStage.show();
     }
     
-    
-    private Group drawSquare() {
-        int boardSize = board.getBoardSize();
-        Group squareG = new Group();
-        for(int i = 0; i < boardSize ;i++) {
-            for(int j = 0; j < boardSize ;j++) {
-                squareG.getChildren().addAll(board.getSquare()[i][j]);
-            }
-        }
-        return squareG;
-        
-    }
-
-    
-    public void reSet() {
-        twoPlayers[0] = new Player(Color.BLACK);
-        twoPlayers[1] = new Player(Color.WHITE);
+    /**
+     * Reset the game.
+     * 
+     */
+    public void reSetGame() {
+        twoPlayers[0] = new Player(Color.BLACK, SQUARESIZE, PIECESIZE, SHIFT);
+        twoPlayers[1] = new Player(Color.WHITE, SQUARESIZE, PIECESIZE, SHIFT);
         currentTeam = Color.BLACK;
     }
     
+    /**
+     * Reset the pieces.
+     * 
+     */
+    public void reSetPieces() {
+        twoPlayers[0].reSetPieces();
+        twoPlayers[1].reSetPieces();
+        currentTeam = Color.BLACK;
+    }
+    
+    /**
+     * Modifies the position of pieces when user click on the screen.
+     * 
+     * @param event
+     *            invoked this method
+     */
     public void processMousePress(MouseEvent event) {
-        int choiceXPosition = (int)event.getX() / squareSize;
-        int choiceYPosition = (int)event.getY() / squareSize;
+        int choiceXPosition = (int) event.getX() / SQUARESIZE;
+        int choiceYPosition = (int) event.getY() / SQUARESIZE;
 
         int i;
         int ni;
-        if(currentTeam == Color.BLACK) {
+        if (currentTeam == Color.BLACK) {
             i = 0;
             ni = 1;
         } else {
@@ -103,33 +100,36 @@ public class Game extends Application {
         }
         
         if (twoPlayers[i].isAnyOccupied(choiceXPosition, choiceYPosition)) {
+            //choice
             currentPiece = null;
-            for(int j = 0; j < 16; j++) {
-                if(allPiece[i][j].isOccupied(choiceXPosition, choiceYPosition)) {
-                    allPiece[i][j].setFitHeight(pieceSize + 5);
-                    allPiece[i][j].setFitWidth(pieceSize + 5);
+            for (int j = 0; j < PIECENUMBER; j++) {
+                if (allPiece[i][j].isOccupied(choiceXPosition, choiceYPosition)) {
+                    allPiece[i][j].setFitHeight(PIECESIZE + SHIFT);
+                    allPiece[i][j].setFitWidth(PIECESIZE + SHIFT);
                     currentPiece = allPiece[i][j];
                 } else {
-                    allPiece[i][j].setFitHeight(pieceSize);
-                    allPiece[i][j].setFitWidth(pieceSize);
+                    allPiece[i][j].setFitHeight(PIECESIZE);
+                    allPiece[i][j].setFitWidth(PIECESIZE);
                 }
             }
-        } else if(currentPiece != null) {
+        } else if (currentPiece != null) {
+            //move
             currentPiece.setxPosition(choiceXPosition);
             currentPiece.setyPosition(choiceYPosition);
-            currentPiece.setFitHeight(pieceSize);
-            currentPiece.setFitWidth(pieceSize);
+            currentPiece.setFitHeight(PIECESIZE);
+            currentPiece.setFitWidth(PIECESIZE);
             
-            for(int j = 0; j < 16; j++) {
-                if(allPiece[ni][j].isOccupied(choiceXPosition, choiceYPosition)) {
+            //eat
+            for (int j = 0; j < PIECENUMBER; j++) {
+                if (allPiece[ni][j].isOccupied(choiceXPosition, choiceYPosition)) {
                     allPiece[ni][j].setxPosition(100);
                     allPiece[ni][j].setyPosition(100);
                 }
             }
             
-            
+            //next team
             currentPiece = null;
-            if(currentTeam == Color.BLACK) {
+            if (currentTeam == Color.BLACK) {
                 currentTeam = Color.WHITE;
             } else {
                 currentTeam = Color.BLACK;

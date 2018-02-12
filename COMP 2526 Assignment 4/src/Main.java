@@ -2,9 +2,10 @@ import javafx.application.Application;
 
 /** 
  * A chess game.
+ * Version 0.1
  * 
  * @author Chih-Hsi Chang
- * @version 2017
+ * @version 2018
  */
 public class Main {
       
